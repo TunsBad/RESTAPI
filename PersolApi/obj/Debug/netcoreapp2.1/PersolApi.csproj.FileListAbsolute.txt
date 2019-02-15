@@ -1,0 +1,14 @@
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\bin\Debug\netcoreapp2.1\PersolApi.deps.json
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\bin\Debug\netcoreapp2.1\PersolApi.runtimeconfig.json
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\bin\Debug\netcoreapp2.1\PersolApi.runtimeconfig.dev.json
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\bin\Debug\netcoreapp2.1\PersolApi.dll
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.csprojAssemblyReference.cache
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.csproj.CoreCompileInputs.cache
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.RazorAssemblyInfo.cache
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.RazorAssemblyInfo.cs
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.AssemblyInfoInputs.cache
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.AssemblyInfo.cs
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.RazorTargetAssemblyInfo.cache
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\bin\Debug\netcoreapp2.1\PersolApi.pdb
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.dll
+C:\Users\Ybadmus\Desktop\Courses\Book\PersolApi\PersolApi\PersolApi\obj\Debug\netcoreapp2.1\PersolApi.pdb
