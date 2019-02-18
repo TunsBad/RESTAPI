@@ -125,6 +125,7 @@ namespace PersolApi
 
                 cfg.CreateMap<Entities.Book, Models.BookDto>();
 
+                //cfg.CreateMap<Object, Entities.Author>();
                 cfg.CreateMap<Models.AuthorForCreationDto, Entities.Author>();
 
                 cfg.CreateMap<Models.BookForCreationDto, Entities.Book>();

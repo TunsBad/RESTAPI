@@ -107,11 +107,17 @@ namespace PersolApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author)
+        public IActionResult CreateAuthor(AuthorForCreationDto author)
         {
             if (author == null)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // return 422
+                return new UnprocessableEntityObjectResultTunsBad(ModelState);
             }
 
             var authorEntity = Mapper.Map<Author>(author);
@@ -134,7 +140,8 @@ namespace PersolApi.Controllers
         [HttpPost("{id}")]
         public IActionResult BlockAuthorCreation(Guid id)
         {
-            if (_libraryRepository.AuthorExists(id))
+            var results = _libraryRepository.AuthorExists(id);
+            if (results)
             {
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }

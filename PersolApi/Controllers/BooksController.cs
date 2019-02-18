@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using PersolApi.Entities;
 using PersolApi.Helpers;
 using PersolApi.Models;
 using PersolApi.Services;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace PersolApi.Controllers
 {
@@ -18,15 +17,17 @@ namespace PersolApi.Controllers
     {
         private ILibraryRepository _libraryRepository;
         private ILogger<BooksController> _logger;
+        private IUrlHelper _urlHelper;
 
-        public BooksController(ILibraryRepository libraryRepository,
+        public BooksController(ILibraryRepository libraryRepository, IUrlHelper urlHelper,
             ILogger<BooksController> logger)
         {
             _logger = logger;
             _libraryRepository = libraryRepository;
+            _urlHelper = urlHelper;
         }
 
-        [HttpGet()]
+        [HttpGet(Name = "GetBooksForAuthor")]
         public IActionResult GetBooksForAuthor(Guid authorId)
         {
             if (!_libraryRepository.AuthorExists(authorId))
@@ -38,7 +39,16 @@ namespace PersolApi.Controllers
 
             var booksForAuthor = Mapper.Map<IEnumerable<BookDto>>(booksForAuthorFromRepo);
 
-            return Ok(booksForAuthor);
+            booksForAuthor = booksForAuthor.Select(book =>
+            {
+                book = CreateLinksForBook(book);
+                return book;
+            });
+
+            //wierd behaviour CreateLinksForBook get called recursively;
+            var wrapper = new LinkedCollectionResourceWrapperDto<BookDto>(booksForAuthor);
+
+            return Ok(CreateLinksForBooks(wrapper));
         }
 
         [HttpGet("{id}", Name = "GetBookForAuthor")]
@@ -56,11 +66,11 @@ namespace PersolApi.Controllers
             }
 
             var bookForAuthor = Mapper.Map<BookDto>(bookForAuthorFromRepo);
-            return Ok(bookForAuthor);
-       }
+            return Ok(CreateLinksForBook(bookForAuthor));
+        }
 
         [HttpPost()]
-        public IActionResult CreateBookForAuthor(Guid authorId, 
+        public IActionResult CreateBookForAuthor(Guid authorId,
             [FromBody] BookForCreationDto book)
         {
             if (book == null)
@@ -97,10 +107,10 @@ namespace PersolApi.Controllers
 
             return CreatedAtRoute("GetBookForAuthor",
                 new { authorId = authorId, id = bookToReturn.Id },
-                bookToReturn);
+               CreateLinksForBook(bookToReturn));
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeleteBookForAuthor")]
         public IActionResult DeleteBookForAuthor(Guid authorId, Guid id)
         {
             if (!_libraryRepository.AuthorExists(authorId))
@@ -126,7 +136,7 @@ namespace PersolApi.Controllers
             return NoContent();
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdateBookForAuthor")]
         public IActionResult UpdateBookForAuthor(Guid authorId, Guid id,
             [FromBody] BookForUpdateDto book)
         {
@@ -137,7 +147,7 @@ namespace PersolApi.Controllers
 
             if (book.Description == book.Title)
             {
-                ModelState.AddModelError(nameof(BookForUpdateDto), 
+                ModelState.AddModelError(nameof(BookForUpdateDto),
                     "The provided description should be different from the title.");
             }
 
@@ -168,7 +178,7 @@ namespace PersolApi.Controllers
                 var bookToReturn = Mapper.Map<BookDto>(bookToAdd);
 
                 return CreatedAtRoute("GetBookForAuthor",
-                    new { authorId = authorId, id = bookToReturn.Id},
+                    new { authorId = authorId, id = bookToReturn.Id },
                     bookToReturn);
             }
 
@@ -184,7 +194,7 @@ namespace PersolApi.Controllers
             return NoContent();
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{id}", Name = "PartiallyUpdateBookForAuthor")]
         public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid id,
             [FromBody] JsonPatchDocument<BookForUpdateDto> patchDoc)
         {
@@ -207,7 +217,7 @@ namespace PersolApi.Controllers
 
                 if (bookDto.Description == bookDto.Title)
                 {
-                    ModelState.AddModelError(nameof(BookForUpdateDto), 
+                    ModelState.AddModelError(nameof(BookForUpdateDto),
                         "The provided description should be different from the title.");
                 }
 
@@ -238,11 +248,11 @@ namespace PersolApi.Controllers
 
             patchDoc.ApplyTo(bookToPatch, ModelState);
 
-           // patchDoc.ApplyTo(bookToPatch);
+            // patchDoc.ApplyTo(bookToPatch);
 
             if (bookToPatch.Description == bookToPatch.Title)
             {
-                ModelState.AddModelError(nameof(BookForUpdateDto), 
+                ModelState.AddModelError(nameof(BookForUpdateDto),
                     "The provided description should be different from the title.");
             }
 
@@ -252,7 +262,7 @@ namespace PersolApi.Controllers
             {
                 return new UnprocessableEntityObjectResult(ModelState);
             }
-           
+
             Mapper.Map(bookToPatch, bookForAuthorFromRepo);
 
             _libraryRepository.UpdateBookForAuthor(bookForAuthorFromRepo);
@@ -263,6 +273,47 @@ namespace PersolApi.Controllers
             }
 
             return NoContent();
+        }
+
+        private BookDto CreateLinksForBook(BookDto book)
+        {
+            book.Links
+                .Add(new LinkDto(_urlHelper.Link("GetBookForAuthor",
+                new { id = book.Id }),
+                "self",
+                "GET"));
+
+            book.Links.Add(
+                new LinkDto(_urlHelper.Link("DeleteBookForAuthor",
+                new { id = book.Id }),
+                "delete_book",
+                "DELETE"));
+
+            book.Links.Add(
+                new LinkDto(_urlHelper.Link("UpdateBookForAuthor",
+                new { id = book.Id }),
+                "update_book",
+                "PUT"));
+
+            book.Links.Add(
+                new LinkDto(_urlHelper.Link("PartiallyUpdateBookForAuthor",
+                new { id = book.Id }),
+                "partially_update_book",
+                "PATCH"));
+
+            return book;
+        }
+
+        private LinkedCollectionResourceWrapperDto<BookDto> CreateLinksForBooks(
+           LinkedCollectionResourceWrapperDto<BookDto> booksWrapper)
+        {
+            // link to self
+            booksWrapper.Links.Add(
+                new LinkDto(_urlHelper.Link("GetBooksForAuthor", new { }),
+                "self",
+                "GET"));
+
+            return booksWrapper;
         }
 
     }
