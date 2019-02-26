@@ -1,14 +1,12 @@
-﻿using PersolApi.Models;
-using PersolApi.Services;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PersolApi.Entities;
+using PersolApi.Helpers;
+using PersolApi.Models;
+using PersolApi.Services;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using PersolApi.Helpers;
-using AutoMapper;
-using PersolApi.Entities;
-using Microsoft.AspNetCore.Http;
 
 namespace PersolApi.Controllers
 {
@@ -26,33 +24,43 @@ namespace PersolApi.Controllers
         }
 
         [HttpGet(Name = "GetAuthors")]
-        public IActionResult GetAuthors(AuthorsResourceParameters authorsResourceParameters)
-        {   
+        public IActionResult GetAuthors(AuthorsResourceParameters authorsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
+        {
             var authorsFromRepo = _libraryRepository.GetAuthors(authorsResourceParameters);
 
-            var previousPageLink = authorsFromRepo.HasPrevious ?
-                CreateAuthorsResourceUri(authorsResourceParameters,
-                ResourceUriType.PreviousPage) : null;
-
-            var nextPageLink = authorsFromRepo.HasNext ? 
-                CreateAuthorsResourceUri(authorsResourceParameters,
-                ResourceUriType.NextPage) : null;
-
-            var paginationMetadata = new
+            if (mediaType == "application/vnd.marvin.hateoas+json")
             {
-                totalCount = authorsFromRepo.TotalCount,
-                pageSize = authorsFromRepo.PageSize,
-                currentPage = authorsFromRepo.CurrentPage,
-                totalPages = authorsFromRepo.TotalPages,
-                previousPageLink = previousPageLink,
-                nextPageLink = nextPageLink
-            };
+                //  Do stuff with data shaping here ...
+                var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo);
+                return Ok(authors);
+            }
+            else
+            {
+                var previousPageLink = authorsFromRepo.HasPrevious ?
+                    CreateAuthorsResourceUri(authorsResourceParameters,
+                    ResourceUriType.PreviousPage) : null;
 
-            Response.Headers.Add("X-Pagination",
-                Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
+                var nextPageLink = authorsFromRepo.HasNext ?
+                    CreateAuthorsResourceUri(authorsResourceParameters,
+                    ResourceUriType.NextPage) : null;
 
-            var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo);
-            return Ok(authors);
+                var paginationMetadata = new
+                {
+                    totalCount = authorsFromRepo.TotalCount,
+                    pageSize = authorsFromRepo.PageSize,
+                    currentPage = authorsFromRepo.CurrentPage,
+                    totalPages = authorsFromRepo.TotalPages,
+                    previousPageLink = previousPageLink,
+                    nextPageLink = nextPageLink
+                };
+
+                Response.Headers.Add("X-Pagination",
+                    Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
+
+                var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo);
+                return Ok(authors);
+            }
+
         }
 
         private string CreateAuthorsResourceUri(
@@ -92,7 +100,7 @@ namespace PersolApi.Controllers
             }
         }
 
-        [HttpGet("{id}", Name ="GetAuthor")]
+        [HttpGet("{id}", Name = "GetAuthor")]
         public IActionResult GetAuthor(Guid id, [FromQuery] string fields)
         {
             var authorFromRepo = _libraryRepository.GetAuthor(id);
@@ -106,7 +114,7 @@ namespace PersolApi.Controllers
             return Ok(author);
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateAuthor")]
         public IActionResult CreateAuthor(AuthorForCreationDto author)
         {
             if (author == null)
@@ -127,7 +135,7 @@ namespace PersolApi.Controllers
             if (!_libraryRepository.Save())
             {
                 throw new Exception("Creating an author failed on save.");
-               // return StatusCode(500, "A problem happened with handling your request.");
+                // return StatusCode(500, "A problem happened with handling your request.");
             }
 
             var authorToReturn = Mapper.Map<AuthorDto>(authorEntity);
@@ -167,6 +175,6 @@ namespace PersolApi.Controllers
 
             return NoContent();
         }
- 
+
     }
 }
