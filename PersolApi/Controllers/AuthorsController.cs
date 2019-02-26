@@ -140,7 +140,40 @@ namespace PersolApi.Controllers
 
             var authorToReturn = Mapper.Map<AuthorDto>(authorEntity);
 
+            //var links = CreateLink
+
             return CreatedAtRoute("GetAuthor",
+                new { id = authorToReturn.Id },
+                authorToReturn);
+        }
+
+        [HttpPost(Name = "CreateAuthorWithDateOfDeath")]
+        public IActionResult CreateAuthorWithDateOfDeath(AuthorForCreationWithDateOfDeathDto author)
+        {
+            if (author == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // return 422
+                return new UnprocessableEntityObjectResultTunsBad(ModelState);
+            }
+
+            var authorEntity = Mapper.Map<Author>(author);
+
+            _libraryRepository.AddAuthor(authorEntity);
+
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception("Creating an author failed on save.");
+                // return StatusCode(500, "A problem happened with handling your request.");
+            }
+
+            var authorToReturn = Mapper.Map<AuthorDto>(authorEntity);
+
+            return CreatedAtRoute("CreateAuthorWithDateOfDeath",
                 new { id = authorToReturn.Id },
                 authorToReturn);
         }
